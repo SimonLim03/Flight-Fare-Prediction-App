@@ -7,7 +7,7 @@ Name: Simon Lim
 This application is a machine learning product, which can predict the expected flight fare for different airport trips. 
 In particular, this project split the travel airfare into 4 different fares, including minimum, median, modal and mean of airfare
 Together, these metrics aim to provide a comprehensive overview of potential fares to users.
-To enable model’s access to users, Docker and Gradio (Streamlit) were used for model deployment, enabling users to use the models as a application.
+To enable model’s access to users, Docker and Streamlit were used for model deployment, enabling users to use the models as a application.
 
 
 ## How to Run the Program
