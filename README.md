@@ -12,12 +12,7 @@ To enable model’s access to users, Docker and Streamlit were used for model de
 
 ## How to Run the Program
 Execute the following steps to run the app:
-- Clone the main branch from the github repo:  https://github.com/SimonLim03/Flight-Fare-Prediction-App.git OR download zip folder
-- Navigate to the root directory of the project in your terminal 
-- Run the following commands:
-    - `docker build -t flight-fare-app .`
-    - `docker run -p 7860:7860 flight-fare-app`
-- Navigate to http://localhost:7860
+- URL link: https://flight-fare-prediction-app-b5ff94ahafghdb9bxwllf5.streamlit.app/
 - Fill in the input form and hit submit!
 
 ## Project Structure
