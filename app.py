@@ -1,32 +1,42 @@
 import os
 import json
 import joblib
-import catboost
-import xgboost
 import calendar
 import pandas as pd
 from datetime import datetime
-import gradio as gr
+import streamlit as st
+import altair as alt
 
-min_model = joblib.load('/models/minimum.pkl')
-median_model = joblib.load('/models/median.pkl')
-modal_model = joblib.load('/models/modal.pkl')
-mean_model = joblib.load('/models/mean.pkl')
+# Get the current directory of the script
+current_directory = os.path.dirname(os.path.realpath(__file__))
 
-# Possible flight Routes
-with open('/models/flightroutes.json', 'r') as file:
+# Define relative paths to models
+models_directory = os.path.join(current_directory, "../models")
+
+min_model_path = os.path.join(models_directory, 'minimum.pkl')
+median_model_path = os.path.join(models_directory, 'median.pkl')
+modal_model_path = os.path.join(models_directory, 'mode.pkl')
+mean_model_path = os.path.join(models_directory, 'mean.pkl')
+flightroutes_path = os.path.join(models_directory, 'flightroutes.json')
+
+# Load models and data
+min_model = joblib.load(min_model_path)
+median_model = joblib.load(median_model_path)
+modal_model = joblib.load(modal_model_path)
+mean_model = joblib.load(mean_model_path)    
+
+with open(flightroutes_path, 'r') as file:
     routes = json.load(file)
 
 # Airport lists
-origin_airports = ['OAK', 'IAD', 'DEN', 'LGA', 'LAX', 'ONT', 'ATL', 'DFW', 'FLL', 
-'CLT', 'PHL', 'TTN', 'DTW', 'JFK', 'DAL', 'BOS', 'EWR', 'SFO', 'ORD', 'MIA']
+origin_airports = ['OAK', 'IAD', 'DEN', 'LGA', 'LAX', 'ONT', 'ATL', 'DFW', 'FLL',
+                   'CLT', 'PHL', 'TTN', 'DTW', 'JFK', 'DAL', 'BOS', 'EWR', 'SFO', 'ORD', 'MIA']
 
 destination_airports = ['DEN', 'LAX', 'PHL', 'DTW', 'ORD', 'SFO', 'ATL', 'BOS', 'CLT',
-'DFW', 'EWR', 'IAD', 'JFK', 'LGA', 'MIA', 'OAK', 'ONT', 'DAL', 'TTN', 'FLL']
+                        'DFW', 'EWR', 'IAD', 'JFK', 'LGA', 'MIA', 'OAK', 'ONT', 'DAL', 'TTN', 'FLL']
 
 # Time categories
 departure_times = ['Early Morning', 'Morning', 'Midday', 'Afternoon', 'Evening', 'Night', 'Late Night']
-
 
 def getfarepredictions(origin, destination, day_of_month, mm, yr, time_category, cabin):
     
@@ -100,50 +110,40 @@ def getfarepredictions(origin, destination, day_of_month, mm, yr, time_category,
         mean_fare = round(mean_model.predict(mean_df)[0], 2)
 
         # Modal fare prediction
-        modal_df = pd.DataFrame({'origin_airport': [origin],
-        'destination_airport': [destination],
-        'departure_date': [date.strftime("%Y-%m-%d")],
-        'cabin_type': [cabin],
+        modal_df = pd.DataFrame({'segmentsDepartureAirportCode': [origin],
+        'segmentsArrivalAirportCode': [destination],
+        'day_of_month': [day_of_month],
+        'day_of_week': [day_of_week],
+        'month': [mm],
+        'year': [yr],
         'time_category': [time_category],
-        'days_from_flight': [days_from_flight],
-        'day_name': [day_name]
+        'segmentsCabinCode': [cabin],
+        'days_from_flight': [days_from_flight]
         })
 
         modal_fare = round(modal_model.predict(modal_df)[0], 2)
 
         return min_fare, median_fare, mean_fare, modal_fare
-
     else:
-        raise gr.Error('Flight route not found! Please try different airports')
+        raise st.Error('Flight route not found! Please try different airports')
 
-# Gradio interface
+# Streamlit interface
+st.title("Flight Fare Prediction for US flights")
 
-with gr.Blocks() as demo:
+origin = st.selectbox("Origin Airport", origin_airports)
+destination = st.selectbox("Destination Airport", destination_airports)
+cabin = st.radio("Cabin", ['coach', 'premium coach', 'first', 'business'])
 
-    gr.Markdown("# Flight Fare Prediction for US flights")
+day_of_month = st.number_input("Day", min_value=1, max_value=31)
+mm = st.selectbox("Month", list(calendar.month_name)[1:])
+yr = st.number_input("Year", min_value=2020, max_value=2030)
+time_category = st.selectbox("Departure Time", departure_times)
 
-    with gr.Row():
-        origin = gr.Dropdown(choices=origin_airports, label="Origin Airport")
-        destination = gr.Dropdown(choices=destination_airports, label="Destination Airport")
-        cabin = gr.Radio(['coach', 'premium coach', 'first', 'business'], label="Cabin")
-        
-    with gr.Row():
-        day_of_month = gr.Number(label="Day", minimum=1, maximum=31)
-        mm = gr.Dropdown(calendar.month_name, label="Month")
-        yr = gr.Number(label="Year", minimum=2020, maximum=2030)
-        time_category = gr.Dropdown(choices=departure_times, label="Departure Time")
-
-    btn = gr.Button("Submit")
-
-    with gr.Row():
-        min_fare = gr.Textbox(value="", label="Minimum Prediction")
-        median_fare = gr.Textbox(value="", label="Median Prediction")
-        mean_fare = gr.Textbox(value="", label="Mean Prediction")
-        modal_fare = gr.Textbox(value="", label="Modal Prediction")
-
-    btn.click(fn=getfarepredictions, inputs=[origin, destination, day_of_month, mm, yr, time_category, cabin], outputs=[min_fare, median_fare, mean_fare, modal_fare])
-
-
-demo.launch(server_name="0.0.0.0", server_port=7860)
-
-
+if st.button("Submit"):
+    predictions = getfarepredictions(origin, destination, day_of_month, mm, yr, time_category, cabin)
+    if predictions:
+        min_fare, median_fare, mean_fare, modal_fare = predictions
+        st.write(f"Minimum Prediction: {min_fare}")
+        st.write(f"Median Prediction: {median_fare}")
+        st.write(f"Mean Prediction: {mean_fare}")
+        st.write(f"Modal Prediction: {modal_fare}")
