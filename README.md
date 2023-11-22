@@ -14,6 +14,8 @@ To enable model’s access to users, Docker and Streamlit were used for model de
 Execute the following steps to run the app:
 - URL link: https://flight-fare-prediction-app-b5ff94ahafghdb9bxwllf5.streamlit.app/
 - Fill in the input form and hit submit!
+![image](https://github.com/SimonLim03/Flight-Fare-Prediction-App/assets/150989115/fd3c49b7-088a-4dba-846a-038d784f1ae5)
+
 
 ## Project Structure
 <p>
