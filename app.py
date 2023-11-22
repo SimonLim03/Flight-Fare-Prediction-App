@@ -11,7 +11,7 @@ import altair as alt
 current_directory = os.path.dirname(os.path.realpath(__file__))
 
 # Define relative paths to models
-models_directory = os.path.join(current_directory, "../models")
+models_directory = os.path.join(current_directory, "./models")
 
 min_model_path = os.path.join(models_directory, 'minimum.pkl')
 median_model_path = os.path.join(models_directory, 'median.pkl')
